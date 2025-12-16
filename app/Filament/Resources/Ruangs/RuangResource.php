@@ -1,0 +1,55 @@
+<?php
+
+namespace App\Filament\Resources\Ruangs;
+
+use App\Filament\Resources\Ruangs\Pages\CreateRuang;
+use App\Filament\Resources\Ruangs\Pages\EditRuang;
+use App\Filament\Resources\Ruangs\Pages\ListRuangs;
+use App\Filament\Resources\Ruangs\Schemas\RuangForm;
+use App\Filament\Resources\Ruangs\Tables\RuangsTable;
+use App\Models\Ruang;
+use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Table;
+
+class RuangResource extends Resource
+{
+    protected static ?string $model = Ruang::class;
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedNumberedList;
+
+    protected static ?string $recordTitleAttribute = 'Ruang';
+
+    public static function form(Schema $schema): Schema
+    {
+        return RuangForm::configure($schema);
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
+
+    public static function table(Table $table): Table
+    {
+        return RuangsTable::configure($table);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListRuangs::route('/'),
+            'create' => CreateRuang::route('/create'),
+            'edit' => EditRuang::route('/{record}/edit'),
+        ];
+    }
+}
