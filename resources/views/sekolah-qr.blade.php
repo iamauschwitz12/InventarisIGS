@@ -34,8 +34,8 @@
 
     <div class="info">
         <div><span class="label">Nama Barang:</span> {{ $record->nama_barang }}</div>
-        <div><span class="label">Ruang:</span> {{ $record->ruang->ruang ?? '-' }}</div>
-        <div><span class="label">Lantai:</span> {{ $record->lantai->lantai ?? '-' }}</div>
+        <div><span class="label">Ruang:</span> {{ $record->ruang->nama_ruang ?? $record->ruang->ruang ?? '-' }}</div>
+        <div><span class="label">Lantai:</span> {{ $record->lantai->nama_lantai ?? $record->lantai->lantai ?? '-' }}</div>
     </div>
 
     <img src="{{ asset('storage/' . $record->qrcode) }}" alt="QR Code Dana Bos">

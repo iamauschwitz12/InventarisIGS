@@ -15,6 +15,7 @@ class Sekolah extends Model
         'tgl_beli',
         'jumlah',
         'img',
+        'keterangan',
     ];
 
     public function ruang()

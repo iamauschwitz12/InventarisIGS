@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Ruangs\Schemas;
 
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
 
 class RuangForm
 {
@@ -11,10 +12,13 @@ class RuangForm
     {
         return $schema
             ->components([
-                TextInput::make('ruang')
-                ->placeholder('Masukan ruang : 601/602/603')
-                ->unique(ignoreRecord: true)
+                Select::make('lantai_id')
+                ->label('Lantai')
+                ->relationship('lantai', 'lantai')
                 ->required(),
+
+                TextInput::make('ruang')
+                    ->required(),
             ]);
     }
 }

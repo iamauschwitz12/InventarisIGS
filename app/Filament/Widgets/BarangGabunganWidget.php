@@ -9,6 +9,7 @@ use Filament\Tables\Table;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Widgets\TableWidget;
+use Filament\Tables\Columns\Summarizers\Sum;
 
 class BarangGabunganWidget extends TableWidget
 {
@@ -24,6 +25,11 @@ class BarangGabunganWidget extends TableWidget
                 Tables\Columns\TextColumn::make('lantai'),
                 Tables\Columns\TextColumn::make('jumlah'),
                 Tables\Columns\TextColumn::make('sumber')->label('Inventaris')->badge(),
+                Tables\Columns\TextColumn::make('jumlah')
+                ->label('Jumlah')
+                ->summarize([
+                Sum::make()->label('Total')
+                ]),
             ])
             ->filters([
                 // Filter sumber

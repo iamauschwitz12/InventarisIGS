@@ -14,8 +14,13 @@ Route::get('/print-qr/{record}', function (Pribadi $record) {
     return view('print-qr', compact('record'));
 })->name('pribadi.printqr');
 
-Route::get('/sekolah-qr/{record}', function (Sekolah $record) {
-    return view('sekolah-qr', compact('record'));
+Route::get('/sekolah-qr/{record}', function ($id) {
+    // Mencari data berdasarkan ID dan memuat relasinya agar tidak error di blade
+    $record = Sekolah::with(['ruang', 'lantai'])->findOrFail($id);
+
+    return view('sekolah-qr', [
+        'record' => $record
+    ]);
 })->name('sekolah.sekolahqr');
 
 Route::get('/danabos-qr/{record}', function (DanaBos $record) {

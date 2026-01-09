@@ -46,9 +46,11 @@ class TipeAsetWidget extends TableWidget
                     ),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('tipe_aset_id')
+                Tables\Filters\SelectFilter::make('id')
                     ->label('Filter Tipe Aset')
-                    ->options(TipeAset::pluck('tipe_aset', 'id'))
+                    ->options(
+                        \App\Models\TipeAset::pluck('tipe_aset', 'id')
+                    )
                     ->placeholder('Semua'),
             ]);
     }

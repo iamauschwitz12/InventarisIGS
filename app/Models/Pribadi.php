@@ -17,6 +17,7 @@ class Pribadi extends Model
         'tgl_beli',
         'jumlah',
         'img',
+        'keterangan',
     ];
 
     public function ruang()
@@ -31,7 +32,7 @@ class Pribadi extends Model
 
     public function tipeAset()
     {
-        return $this->belongsTo(TipeAset::class);
+        return $this->belongsTo(TipeAset::class, 'tipe_aset_id');
     }
     public function setNamaBarangAttribute($value)
     {

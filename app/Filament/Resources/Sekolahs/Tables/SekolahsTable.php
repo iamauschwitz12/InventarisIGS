@@ -46,6 +46,10 @@ class SekolahsTable
                 ->label('QR')
                 ->disk('public')
                 ->size(80),
+                TextColumn::make('keterangan')
+                ->label('Keterangan')
+                ->searchable()
+                ->sortable(),
                 TextColumn::make('jumlah')
                 ->label('Jumlah')
                 ->summarize([
@@ -68,6 +72,7 @@ class SekolahsTable
                                     ->heading('Harga')
                                     ->format(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1),
                                 Column::make('tgl_beli')->heading('Tanggal Beli'),
+                                Column::make('keterangan')->heading('Keterangan'),
                                 Column::make('jumlah')->heading('Jumlah'),
                             ])
                             ->withFilename('sekolahs-' . now()->format('Y-m-d'))

@@ -48,6 +48,9 @@ class SekolahForm
                 ->required(),
                 TextInput::make('jumlah')
                 ->numeric(),
+                TextInput::make('keterangan')
+                ->label('Keterangan')
+                ->placeholder('Input keterangan atau kosongkan'),
                 FileUpload::make('img')
             ]);
     }
