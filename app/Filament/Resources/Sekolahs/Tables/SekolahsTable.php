@@ -30,6 +30,10 @@ class SekolahsTable
                 ->label('Nama Barang')
                 ->searchable()
                 ->sortable(),
+                TextColumn::make('no_seri')
+                ->label('Nomor Seri')
+                ->searchable()
+                ->sortable(),
                 TextColumn::make('ruang.ruang')
                 ->label('Ruang')
                 ->searchable()
@@ -92,6 +96,10 @@ class SekolahsTable
                             ->label('Ruang')
                             ->placeholder('Cari ruang...'),
 
+                        Forms\Components\TextInput::make('no_seri')
+                            ->label('Nomor Seri')
+                            ->placeholder('Cari nomor seri...'),
+
                         Forms\Components\TextInput::make('lantai')
                             ->label('Lantai')
                             ->placeholder('Cari lantai...'),
@@ -105,6 +113,9 @@ class SekolahsTable
                                 $q->whereHas('ruang', fn ($qr) =>
                                     $qr->where('ruang', 'like', "%{$value}%")
                                 )
+                            )
+                            ->when($data['no_seri'] ?? null, fn ($q, $value) =>
+                                $q->where('no_seri', 'like', "%{$value}%")
                             )
                             ->when($data['lantai'] ?? null, fn ($q, $value) =>
                                 $q->whereHas('lantai', fn ($ql) =>

@@ -19,7 +19,7 @@ class BarangRusakResource extends Resource
 {
     protected static ?string $model = BarangRusak::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArchiveBoxXMark;
 
     protected static ?string $recordTitleAttribute = 'BarangRusak';
 

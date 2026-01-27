@@ -16,6 +16,7 @@ use Filament\Support\RawJs;
 use App\Models\Pribadi;
 use App\Models\DanaBos;
 use App\Models\Sekolah;
+use App\Models\TipeAsetDanaBos;
 
 class BarangRusakForm
 {
@@ -36,17 +37,29 @@ class BarangRusakForm
                 ->required(),
                 Select::make('tipe_aset_id')
                 ->label('Tipe Aset')
-                ->relationship('tipeAset', 'tipe_aset')
+                ->options(function ($get) {
+                    // Hanya tampilkan untuk Pribadi dan Sekolah
+                    $inventaris_type = $get('inventaris_type');
+                    
+                    if ($inventaris_type === DanaBos::class) {
+                        return [];
+                    }
+                    
+                    return \App\Models\TipeAset::query()
+                        ->pluck('tipe_aset', 'id');
+                })
+                ->visible(fn ($get) => $get('inventaris_type') !== DanaBos::class)
                 ->reactive()
-                ->afterStateUpdated(fn ($set) => $set('inventaris_id', null))
+
                 ->searchable()
                 ->preload()
+                ->required(fn ($get) => $get('inventaris_type') !== DanaBos::class)
                 ->required(),
                 Select::make('lantai_id')
                 ->label('Lantai')
                 ->relationship('lantai', 'lantai')
                 ->reactive()
-                ->afterStateUpdated(fn ($set) => $set('ruang_id', null))
+
                 ->searchable()
                 ->preload()
                 ->required(),
@@ -58,7 +71,6 @@ class BarangRusakForm
                         ->pluck('ruang', 'id')
                 )
                 ->reactive()
-                ->afterStateUpdated(fn ($set) => $set('inventaris_id', null))
                 ->searchable()
                 ->required(),
                 Select::make('inventaris_id')
@@ -70,10 +82,21 @@ class BarangRusakForm
                         return [];
                     }
 
-                    return $model::query()
-                        ->when($get('tipe_aset_id'), fn ($q) =>
+                    $query = $model::query();
+                    
+                    // Untuk DanaBos, filter dengan tipe_aset_dana_bos_id
+                    if ($model === DanaBos::class) {
+                        $query = $query->when($get('tipe_aset_id'), fn ($q) =>
+                            $q->where('tipe_aset_dana_bos_id', $get('tipe_aset_id'))
+                        );
+                    } else {
+                        // Untuk Pribadi dan Sekolah, filter dengan tipe_aset_id
+                        $query = $query->when($get('tipe_aset_id'), fn ($q) =>
                             $q->where('tipe_aset_id', $get('tipe_aset_id'))
-                        )
+                        );
+                    }
+
+                    return $query
                         ->when($get('lantai_id'), fn ($q) =>
                             $q->where('lantai_id', $get('lantai_id'))
                         )
@@ -83,8 +106,25 @@ class BarangRusakForm
                         ->pluck('nama_barang', 'id');
                 })
                 ->reactive()
+                ->afterStateUpdated(function ($state, $set, $get) {
+                    if ($state) {
+                        $model = $get('inventaris_type');
+                        if ($model) {
+                            $inventaris = $model::find($state);
+                            $set('no_seri', $inventaris?->no_seri);
+                            // Set tipe_aset_id dari inventaris hanya untuk Pribadi/Sekolah
+                            if ($model !== DanaBos::class) {
+                                $set('tipe_aset_id', $inventaris?->tipe_aset_id);
+                            }
+                        }
+                    }
+                })
                 ->searchable()
                 ->required(),
+                TextInput::make('no_seri')
+                ->label('Nomor Seri')
+                ->disabled()
+                ->dehydrated(),
                 // Pilih Barang sesuai tabel
                 TextInput::make('jumlah_rusak')
                 ->label('Jumlah Rusak')

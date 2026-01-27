@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('lantai_id')->constrained('lantais')->cascadeOnDelete();
             $table->foreignId('tipe_aset_id')->constrained('tipe_asets')->cascadeOnDelete();
             $table->string('nama_barang');
+            $table->string('no_seri')->unique();
             $table->integer('harga')->nullable();
             $table->date('tgl_beli');
             $table->string('img')->nullable();

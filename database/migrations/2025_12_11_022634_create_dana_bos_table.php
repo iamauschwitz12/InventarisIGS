@@ -15,8 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('ruang_id')->constrained('ruangs')->cascadeOnDelete();
             $table->foreignId('lantai_id')->constrained('lantais')->cascadeOnDelete();
-            $table->foreignId('tipe_aset_id')->constrained('tipe_asets')->cascadeOnDelete();
+            $table->foreignId('tipe_aset_dana_bos_id')->constrained('tipe_aset_dana_bos')->cascadeOnDelete();
             $table->string('nama_barang');
+            $table->string('no_seri')->unique();
             $table->integer('harga')->nullable();
             $table->date('tgl_beli');
             $table->string('img')->nullable();

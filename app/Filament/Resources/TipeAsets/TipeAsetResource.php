@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class TipeAsetResource extends Resource
 {
@@ -21,6 +22,8 @@ class TipeAsetResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedQueueList;
 
     protected static ?string $recordTitleAttribute = 'TipeAset';
+
+    protected static string | UnitEnum | null $navigationGroup = 'Kategori Manajemen';
 
     public static function form(Schema $schema): Schema
     {

@@ -24,6 +24,12 @@ class SekolahForm
                 ->extraAttributes([
                     'oninput' => "this.value = this.value.toUpperCase()",
                 ]),
+                TextInput::make('no_seri')
+                ->required()
+                ->placeholder('Masukan nomor seri barang')
+                ->extraInputAttributes(['style' => 'text-transform: uppercase'])
+                ->dehydrateStateUsing(fn ($state) => strtoupper($state)),
+                
                 Select::make('lantai_id')
                 ->relationship('lantai', 'lantai')
                 ->searchable()

@@ -24,16 +24,28 @@ class DanaBosForm
                 ->extraAttributes([
                     'oninput' => "this.value = this.value.toUpperCase()",
                 ]),
+                TextInput::make('no_seri')
+                ->required()
+                ->placeholder('Masukan nomor seri barang')
+                ->extraInputAttributes(['style' => 'text-transform: uppercase'])
+                ->dehydrateStateUsing(fn ($state) => strtoupper($state)),
+
                 Select::make('lantai_id')
                 ->relationship('lantai', 'lantai')
                 ->searchable()
                 ->preload()
-                ->required(),
+                ->required()
+                ->createOptionForm([
+                        Forms\Components\TextInput::make('lantai')->required(),
+                ]),
                 Select::make('ruang_id')
                 ->relationship('ruang', 'ruang')   // menampilkan nama ruang
                 ->searchable()
                 ->preload()
-                ->required(),
+                ->required()
+                ->createOptionForm([
+                        Forms\Components\TextInput::make('ruang')->required(),
+                ]),
                 TextInput::make('harga')
                 ->mask(RawJs::make('$money($input)'))
                 ->stripCharacters(',')
@@ -41,11 +53,14 @@ class DanaBosForm
                 ->numeric(),
                 DatePicker::make('tgl_beli')
                 ->required(),
-                Select::make('tipe_aset_id')
-                ->relationship('tipeAset', 'tipe_aset')
+                Select::make('tipe_aset_dana_bos_id')
+                ->relationship('tipeAsetDanaBos', 'tipe_aset_dana_bos')
                 ->searchable()
                 ->preload()
-                ->required(),
+                ->required()
+                ->createOptionForm([
+                        Forms\Components\TextInput::make('tipe_aset_dana_bos')->required(),
+                ]),
                 TextInput::make('jumlah')
                 ->numeric(),
                 TextInput::make('keterangan')

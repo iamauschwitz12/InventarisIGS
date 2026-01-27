@@ -18,6 +18,7 @@ class Pribadi extends Model
         'jumlah',
         'img',
         'keterangan',
+        'no_seri',
     ];
 
     public function ruang()

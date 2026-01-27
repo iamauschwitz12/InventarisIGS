@@ -16,6 +16,7 @@ class BarangRusak extends Model
         'tgl_rusak',
         'tgl_input',
         'keterangan',
+        'no_seri',
     ];
 
     public function inventaris()
@@ -37,5 +38,20 @@ class BarangRusak extends Model
     public function tipeAset()
     {
         return $this->belongsTo(TipeAset::class);
+    }
+
+    // Relasi dinamis untuk menampilkan tipe aset sesuai jenis inventaris
+    public function getTipeAsetDisplay()
+    {
+        if ($this->inventaris_type === DanaBos::class && $this->inventaris) {
+            return $this->inventaris->tipeAsetDanaBos->tipe_aset_dana_bos ?? '-';
+        }
+        
+        return $this->tipeAset->tipe_aset ?? '-';
+    }
+
+    public function engineering()
+    {
+        return $this->hasOne(Engineering::class);
     }
 }

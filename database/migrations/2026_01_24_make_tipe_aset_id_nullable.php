@@ -11,11 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('ruangs', function (Blueprint $table) {
-            if (! Schema::hasColumn('ruangs', 'lantai_id')) {
-                    $table->unsignedBigInteger('lantai_id')->nullable()->after('ruang');
-            }
-            });
+        Schema::table('barang_rusaks', function (Blueprint $table) {
+            $table->foreignId('tipe_aset_id')->nullable()->change();
+        });
     }
 
     /**
@@ -23,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('ruangs', function (Blueprint $table) {
-            $table->dropColumn('lantai_id');
+        Schema::table('barang_rusaks', function (Blueprint $table) {
+            $table->foreignId('tipe_aset_id')->nullable(false)->change();
         });
     }
 };

@@ -21,7 +21,9 @@ class TipeAsetBarangWidget extends TableWidget
     public function table(Table $table): Table
     {
         return $table
-            ->query(Marger::query()) // ambil dari view gabungan
+            ->query(Marger::query()
+                ->whereRaw("CONVERT(marger_view.sumber USING utf8mb4) COLLATE utf8mb4_unicode_ci != ?", ['Dana BOS'])
+            ) // ambil dari view gabungan, exclude Dana BOS
             ->columns([
                 Tables\Columns\TextColumn::make('tipe_aset')->label('Jenis Aset')->sortable(),
                 Tables\Columns\TextColumn::make('nama_barang')->label('Nama Barang')->searchable(),
@@ -46,15 +48,16 @@ class TipeAsetBarangWidget extends TableWidget
                     ->label('Export Excel')
                     ->exports([
                         ExcelExport::make('tipeasete_custom')
-                            // kita tidak pakai fromTable() di sini, tetapi bisa juga kombinasikan
                             ->withColumns([
+                                Column::make('tipe_aset')->heading('Tipe Aset'),
                                 Column::make('nama_barang')->heading('Nama Barang'),
-                                Column::make('ruang.ruang')->heading('Ruang'),
-                                Column::make('lantai.lantai')->heading('Lantai'),
-                                Column::make('tipeAset.tipe_aset')->heading('Tipe Aset'),
+                                Column::make('ruang')->heading('Ruang'),
+                                Column::make('lantai')->heading('Lantai'),
+                                Column::make('jumlah')->heading('Jumlah'),
+                                Column::make('sumber')->heading('Sumber Inventaris'),
                             ])
                             ->withFilename('tipeaset-' . now()->format('Y-m-d'))
-                            ->fromTable() // jika mau sumber datanya tetap berasal dari table query (filter/search ikut)
+                            ->fromTable()
                             ->withChunkSize(500),
                     ]),
             ])

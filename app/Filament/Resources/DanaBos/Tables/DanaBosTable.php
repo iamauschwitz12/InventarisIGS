@@ -19,6 +19,8 @@ use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use pxlrbt\FilamentExcel\Columns\Column;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use App\Models\TipeAsetDanaBos;
+
 
 class DanaBosTable
 {
@@ -28,6 +30,10 @@ class DanaBosTable
             ->columns([
                 TextColumn::make('nama_barang')
                 ->label('Nama Barang')
+                ->searchable()
+                ->sortable(),
+                TextColumn::make('no_seri')
+                ->label('Nomor Seri')
                 ->searchable()
                 ->sortable(),
                 TextColumn::make('ruang.ruang')
@@ -50,6 +56,10 @@ class DanaBosTable
                 ->label('Keterangan')
                 ->searchable()
                 ->sortable(),
+                TextColumn::make('tipeAsetDanaBos.tipe_aset_dana_bos')
+                ->label('Tipe Aset')
+                ->searchable()
+                ->sortable(),
                 TextColumn::make('jumlah')
                 ->label('Jumlah')
                 ->summarize([
@@ -66,7 +76,7 @@ class DanaBosTable
                                 Column::make('nama_barang')->heading('Nama Barang'),
                                 Column::make('ruang.ruang')->heading('Ruang'),
                                 Column::make('lantai.lantai')->heading('Lantai'),
-                                Column::make('tipeAset.tipe_aset')->heading('Tipe Aset'),
+                                Column::make('tipeAsetDanaBos.tipe_aset_dana_bos')->heading('Tipe Aset'),
                                 // contoh format angka (currency) — gunakan NumberFormat jika perlu
                                 Column::make('harga')
                                     ->heading('Harga')
@@ -95,6 +105,17 @@ class DanaBosTable
                         Forms\Components\TextInput::make('lantai')
                             ->label('Lantai')
                             ->placeholder('Cari lantai...'),
+
+                        Forms\Components\TextInput::make('no_seri')
+                            ->label('Nomor Seri')
+                            ->placeholder('Cari nomor seri...'),
+
+                        Forms\Components\Select::make('tipe_aset_dana_bos_id')
+                            ->label('Tipe Aset')
+                            ->relationship('tipeAsetDanaBos', 'tipe_aset_dana_bos')
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Cari tipe aset...'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
@@ -110,6 +131,12 @@ class DanaBosTable
                                 $q->whereHas('lantai', fn ($ql) =>
                                     $ql->where('lantai', 'like', "%{$value}%")
                                 )
+                            )
+                            ->when($data['no_seri'] ?? null, fn ($q, $value) =>
+                                $q->where('no_seri', 'like', "%{$value}%")
+                            )
+                            ->when($data['tipe_aset_dana_bos_id'] ?? null, fn ($q, $value) =>
+                                $q->where('tipe_aset_dana_bos_id', $value)
                             );
                     }),
             ])

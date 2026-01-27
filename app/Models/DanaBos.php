@@ -10,12 +10,13 @@ class DanaBos extends Model
         'nama_barang',
         'lantai_id',
         'ruang_id',
-        'tipe_aset_id',
+        'tipe_aset_dana_bos_id',
         'harga',
         'tgl_beli',
         'jumlah',
         'img',
         'keterangan',
+        'no_seri',
     ];
 
     public function ruang()
@@ -28,9 +29,9 @@ class DanaBos extends Model
         return $this->belongsTo(Lantai::class);
     }
 
-    public function tipeAset()
+    public function tipeAsetDanaBos()
     {
-        return $this->belongsTo(TipeAset::class);
+        return $this->belongsTo(TipeAsetDanaBos::class);
     }
     public function setNamaBarangAttribute($value)
     {
