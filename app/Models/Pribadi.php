@@ -19,6 +19,12 @@ class Pribadi extends Model
         'img',
         'keterangan',
         'no_seri',
+        'gedung_id',
+        'no_invoice',
+        'tipe_aset_kategori_id',
+        'kode_inventaris',
+        'jenjang',
+        'group_id',
     ];
 
     public function ruang()
@@ -42,5 +48,18 @@ class Pribadi extends Model
     public function barangRusak()
     {
         return $this->morphMany(BarangRusak::class, 'inventaris');
+    }
+    public function gedung()
+    {
+        return $this->belongsTo(Gedung::class);
+    }
+    public function tipeAsetKategori()
+    {
+        return $this->belongsTo(TipeAsetKategori::class, 'tipe_aset_kategori_id');
+    }
+
+    public function printHistories()
+    {
+        return $this->hasMany(PrintHistory::class);
     }
 }

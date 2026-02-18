@@ -11,12 +11,18 @@ class Sekolah extends Model
         'lantai_id',
         'ruang_id',
         'tipe_aset_id',
+        'tipe_aset_kategori_id',
+        'gedung_id',
         'harga',
         'tgl_beli',
         'jumlah',
         'img',
         'keterangan',
         'no_seri',
+        'kode_inventaris',
+        'no_invoice',
+        'jenjang',
+        'group_id',
     ];
 
     public function ruang()
@@ -31,14 +37,31 @@ class Sekolah extends Model
 
     public function tipeAset()
     {
-        return $this->belongsTo(TipeAset::class);
+        return $this->belongsTo(TipeAset::class, 'tipe_aset_id');
     }
+
+    public function tipeAsetKategori()
+    {
+        return $this->belongsTo(TipeAsetKategori::class, 'tipe_aset_kategori_id');
+    }
+
+    public function gedung()
+    {
+        return $this->belongsTo(Gedung::class);
+    }
+
     public function setNamaBarangAttribute($value)
     {
         $this->attributes['nama_barang'] = strtoupper($value);
     }
+
     public function barangRusak()
     {
         return $this->morphMany(BarangRusak::class, 'inventaris');
+    }
+
+    public function printHistories()
+    {
+        return $this->hasMany(PrintHistory::class);
     }
 }

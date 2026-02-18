@@ -29,10 +29,6 @@ class TipeAsetDanaBosResource extends Resource
     {
         return TipeAsetDanaBosForm::configure($schema);
     }
-    public static function getNavigationBadge(): ?string
-    {
-        return static::getModel()::count();
-    }
 
     public static function table(Table $table): Table
     {

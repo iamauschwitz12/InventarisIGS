@@ -16,4 +16,16 @@ class ListDanaBos extends ListRecords
             CreateAction::make(),
         ];
     }
+
+    public function deletePrintHistory($id)
+    {
+        $record = \App\Models\PrintHistory::find($id);
+        if ($record) {
+            $record->delete();
+            \Filament\Notifications\Notification::make()
+                ->title('Berhasil dihapus')
+                ->success()
+                ->send();
+        }
+    }
 }

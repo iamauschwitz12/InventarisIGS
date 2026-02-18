@@ -15,8 +15,14 @@ class LantaisTable
     {
         return $table
             ->columns([
+                TextColumn::make('gedung.nama_gedung')
+                    ->label('Gedung')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('lantai')
-                ->label('Lantai'),
+                    ->label('Lantai')
+                    ->searchable()
+                    ->sortable(),
             ])
             ->filters([
                 //

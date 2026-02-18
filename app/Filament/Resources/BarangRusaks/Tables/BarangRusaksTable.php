@@ -7,6 +7,12 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Table;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\Action;
+use Filament\Support\Enums\Width;
+use App\Models\BarangRusak;
+use App\Models\Pribadi;
+use App\Models\Sekolah;
+use App\Models\DanaBos;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,7 +20,6 @@ use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms;
-use App\Models\Pribadi;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use pxlrbt\FilamentExcel\Columns\Column;
@@ -28,37 +33,65 @@ class BarangRusaksTable
         return $table
             ->columns([
                 TextColumn::make('inventaris_type')
-                ->label('Jenis Inventaris')
-                ->formatStateUsing(fn ($state) => class_basename($state))
-                ->searchable(),
+                    ->label('Jenis Inventaris')
+                    ->formatStateUsing(fn($state) => class_basename($state))
+                    ->searchable(),
                 TextColumn::make('tipe_aset_label')
-                ->label('Tipe Aset')
-                ->getStateUsing(function ($record) {
-                    if ($record->inventaris_type === \App\Models\DanaBos::class && $record->inventaris) {
-                        return $record->inventaris->tipeAsetDanaBos?->tipe_aset_dana_bos ?? '-';
-                    }
-                    return $record->tipeAset?->tipe_aset ?? '-';
-                })
-                ->sortable(),
-                TextColumn::make('inventaris.nama_barang')
-                ->label('Nama Barang')
-                ->searchable(),
+                    ->label('Tipe Aset')
+                    ->getStateUsing(function ($record) {
+                        if ($record->inventaris_type === \App\Models\DanaBos::class && $record->inventaris) {
+                            return $record->inventaris->tipeAsetDanaBos?->tipe_aset_dana_bos ?? '-';
+                        }
+                        return $record->tipeAset?->tipe_aset ?? '-';
+                    })
+                    ->sortable(),
+                TextColumn::make('nama_barang_display')
+                    ->label('Nama Barang')
+                    ->getStateUsing(function ($record) {
+                        return $record->inventaris?->nama_barang ?? '-';
+                    })
+                    ->searchable(query: function (Builder $query, string $search): Builder {
+                        $search = '%' . $search . '%';
+                        return $query->where(function ($q) use ($search) {
+                            $q->whereExists(function ($sub) use ($search) {
+                                $sub->selectRaw('1')
+                                    ->from('pribadis')
+                                    ->whereRaw("JSON_CONTAINS(barang_rusaks.inventaris_id, CAST(pribadis.id AS JSON))")
+                                    ->where('pribadis.nama_barang', 'like', $search);
+                            })
+                                ->orWhereExists(function ($sub) use ($search) {
+                                    $sub->selectRaw('1')
+                                        ->from('sekolahs')
+                                        ->whereRaw("JSON_CONTAINS(barang_rusaks.inventaris_id, CAST(sekolahs.id AS JSON))")
+                                        ->where('sekolahs.nama_barang', 'like', $search);
+                                })
+                                ->orWhereExists(function ($sub) use ($search) {
+                                    $sub->selectRaw('1')
+                                        ->from('dana_bos')
+                                        ->whereRaw("JSON_CONTAINS(barang_rusaks.inventaris_id, CAST(dana_bos.id AS JSON))")
+                                        ->where('dana_bos.nama_barang', 'like', $search);
+                                });
+                        });
+                    }),
                 TextColumn::make('no_seri')
-                ->label('Nomor Seri')
-                ->searchable()
-                ->sortable(),
+                    ->label('Nomor Seri')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('jumlah_rusak')->label('Banyak Rusak'),
                 TextColumn::make('ruang.ruang')
-                ->label('Ruang')
-                ->searchable()
-                ->sortable(),
+                    ->label('Ruang')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('lantai.lantai')
-                ->label('Lantai')
-                ->searchable()
-                ->sortable(),
+                    ->label('Lantai')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('kode_inventaris')
+                    ->label('Kode Inventaris')
+                    ->searchable(),
                 TextColumn::make('tgl_rusak')->date()->label('Tanggal Rusak'),
                 TextColumn::make('keterangan')->label('Keterangan')->limit(30)
-                ->searchable(),
+                    ->searchable(),
                 TextColumn::make('created_at')->date()->label('Tgl Input'),
             ])
             ->filters([
@@ -131,18 +164,42 @@ class BarangRusaksTable
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['inventaris_type'] ?? null, fn ($q, $value) =>
+                            ->when(
+                                $data['inventaris_type'] ?? null,
+                                fn($q, $value) =>
                                 $q->where('inventaris_type', $value)
                             )
-                            ->when($data['nama_barang'] ?? null, fn ($q, $value) =>
-                                $q->whereHas('inventaris', fn ($subq) =>
-                                    $subq->where('nama_barang', 'like', "%{$value}%")
-                                )
-                            )
-                            ->when($data['no_seri'] ?? null, fn ($q, $value) =>
+                            ->when($data['nama_barang'] ?? null, function ($q, $value) {
+                                $search = '%' . $value . '%';
+                                return $q->where(function ($q) use ($search) {
+                                    $q->whereExists(function ($sub) use ($search) {
+                                        $sub->selectRaw('1')
+                                            ->from('pribadis')
+                                            ->whereRaw("JSON_CONTAINS(barang_rusaks.inventaris_id, CAST(pribadis.id AS JSON))")
+                                            ->where('pribadis.nama_barang', 'like', $search);
+                                    })
+                                        ->orWhereExists(function ($sub) use ($search) {
+                                            $sub->selectRaw('1')
+                                                ->from('sekolahs')
+                                                ->whereRaw("JSON_CONTAINS(barang_rusaks.inventaris_id, CAST(sekolahs.id AS JSON))")
+                                                ->where('sekolahs.nama_barang', 'like', $search);
+                                        })
+                                        ->orWhereExists(function ($sub) use ($search) {
+                                            $sub->selectRaw('1')
+                                                ->from('dana_bos')
+                                                ->whereRaw("JSON_CONTAINS(barang_rusaks.inventaris_id, CAST(dana_bos.id AS JSON))")
+                                                ->where('dana_bos.nama_barang', 'like', $search);
+                                        });
+                                });
+                            })
+                            ->when(
+                                $data['no_seri'] ?? null,
+                                fn($q, $value) =>
                                 $q->where('no_seri', 'like', "%{$value}%")
                             )
-                            ->when($data['tipe_aset_id'] ?? null, fn ($q, $value) =>
+                            ->when(
+                                $data['tipe_aset_id'] ?? null,
+                                fn($q, $value) =>
                                 $q->where('tipe_aset_id', $value)
                             )
                             ->when($data['tipe_aset_dana_bos_id'] ?? null, function ($q, $value) {
@@ -155,22 +212,34 @@ class BarangRusaksTable
                                         )", [$value]);
                                 });
                             })
-                            ->when($data['ruang_id'] ?? null, fn ($q, $value) =>
+                            ->when(
+                                $data['ruang_id'] ?? null,
+                                fn($q, $value) =>
                                 $q->where('ruang_id', $value)
                             )
-                            ->when($data['lantai_id'] ?? null, fn ($q, $value) =>
+                            ->when(
+                                $data['lantai_id'] ?? null,
+                                fn($q, $value) =>
                                 $q->where('lantai_id', $value)
                             )
-                            ->when($data['tgl_rusak_from'] ?? null, fn ($q, $value) =>
+                            ->when(
+                                $data['tgl_rusak_from'] ?? null,
+                                fn($q, $value) =>
                                 $q->whereDate('tgl_rusak', '>=', $value)
                             )
-                            ->when($data['tgl_rusak_to'] ?? null, fn ($q, $value) =>
+                            ->when(
+                                $data['tgl_rusak_to'] ?? null,
+                                fn($q, $value) =>
                                 $q->whereDate('tgl_rusak', '<=', $value)
                             )
-                            ->when($data['created_at_from'] ?? null, fn ($q, $value) =>
+                            ->when(
+                                $data['created_at_from'] ?? null,
+                                fn($q, $value) =>
                                 $q->whereDate('created_at', '>=', $value)
                             )
-                            ->when($data['created_at_to'] ?? null, fn ($q, $value) =>
+                            ->when(
+                                $data['created_at_to'] ?? null,
+                                fn($q, $value) =>
                                 $q->whereDate('created_at', '<=', $value)
                             );
                     }),
@@ -198,6 +267,37 @@ class BarangRusaksTable
             ->recordActions([
                 EditAction::make(),
                 DeleteAction::make(),
+                Action::make('lihat_barcode')
+                    ->label('Lihat Barcode')
+                    ->icon('heroicon-o-qr-code')
+                    ->modalHeading('Barcode Barang Rusak')
+                    ->modalSubmitAction(false)
+                    ->modalCancelAction(fn($action) => $action->label('Tutup'))
+                    ->modalContent(function (BarangRusak $record) {
+                        $jenis = match ($record->inventaris_type) {
+                            Pribadi::class => 'pribadi',
+                            Sekolah::class => 'sekolah',
+                            DanaBos::class => 'dana_bos',
+                            default => null,
+                        };
+
+                        $modelClass = $record->inventaris_type;
+                        $ids = is_array($record->inventaris_id) ? $record->inventaris_id : [$record->inventaris_id];
+
+                        $records = collect();
+                        if ($modelClass) {
+                            $records = $modelClass::whereIn('id', $ids)
+                                ->orderBy('kode_inventaris')
+                                ->get();
+                        }
+
+                        return view('filament.resources.barang-rusaks.components.barcode-rusak-modal', [
+                            'records' => $records,
+                            'barangRusak' => $record->load(['gedung', 'ruang']),
+                            'jenis' => $jenis,
+                        ]);
+                    })
+                    ->modalWidth(Width::FiveExtraLarge),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

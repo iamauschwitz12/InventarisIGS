@@ -27,11 +27,6 @@ class BarangRusakResource extends Resource
     {
         return BarangRusakForm::configure($schema);
     }
-
-    public static function getNavigationBadge(): ?string
-    {
-        return static::getModel()::count();
-    }
     
     public static function table(Table $table): Table
     {

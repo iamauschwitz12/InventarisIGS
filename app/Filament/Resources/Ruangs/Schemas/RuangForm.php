@@ -12,13 +12,28 @@ class RuangForm
     {
         return $schema
             ->components([
+                Select::make('gedung_id')
+                    ->label('Gedung')
+                    ->relationship('gedung', 'nama_gedung')
+                    ->required()
+                    ->reactive()
+                    ->afterStateUpdated(fn(callable $set) => $set('lantai_id', null)),
+
                 Select::make('lantai_id')
-                ->label('Lantai')
-                ->relationship('lantai', 'lantai')
-                ->required(),
+                    ->label('Lantai')
+                    ->relationship('lantai', 'lantai', function ($query, callable $get) {
+                        $gedungId = $get('gedung_id');
+                        if ($gedungId) {
+                            $query->where('gedung_id', $gedungId);
+                        }
+                    })
+                    ->required(),
 
                 TextInput::make('ruang')
-                    ->required(),
+                    ->required()
+                    ->unique(ignoreRecord: true, modifyRuleUsing: function ($rule, callable $get) {
+                        return $rule->where('gedung_id', $get('gedung_id'));
+                    }),
             ]);
     }
 }

@@ -16,8 +16,10 @@ return new class extends Migration
             $table->foreignId('ruang_id')->constrained('ruangs')->cascadeOnDelete();
             $table->foreignId('lantai_id')->constrained('lantais')->cascadeOnDelete();
             $table->foreignId('tipe_aset_dana_bos_id')->constrained('tipe_aset_dana_bos')->cascadeOnDelete();
+            $table->foreignId('gedung_id')->constrained('gedungs')->cascadeOnDelete();
             $table->string('nama_barang');
-            $table->string('no_seri')->unique();
+            $table->string('kode_inventaris');
+            $table->string('no_seri');
             $table->integer('harga')->nullable();
             $table->date('tgl_beli');
             $table->string('img')->nullable();

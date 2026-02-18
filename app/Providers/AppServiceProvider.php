@@ -19,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \App\Models\TransferInventaris::observe(\App\Observers\TransferInventarisObserver::class);
+        \App\Models\BarangRusak::observe(\App\Observers\BarangRusakObserver::class);
     }
 }

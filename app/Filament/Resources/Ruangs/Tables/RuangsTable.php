@@ -15,8 +15,18 @@ class RuangsTable
     {
         return $table
             ->columns([
+                TextColumn::make('gedung.nama_gedung')
+                    ->label('Gedung')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('lantai.lantai')
+                    ->label('Lantai')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('ruang')
-                ->label('Ruang'),
+                    ->label('Ruang')
+                    ->searchable()
+                    ->sortable(),
             ])
             ->filters([
                 //

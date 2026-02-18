@@ -30,11 +30,6 @@ class RuangResource extends Resource
         return RuangForm::configure($schema);
     }
 
-    public static function getNavigationBadge(): ?string
-    {
-        return static::getModel()::count();
-    }
-
     public static function table(Table $table): Table
     {
         return RuangsTable::configure($table);

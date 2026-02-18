@@ -21,27 +21,41 @@ class TipeAsetBarangWidget extends TableWidget
     public function table(Table $table): Table
     {
         return $table
-            ->query(Marger::query()
-                ->whereRaw("CONVERT(marger_view.sumber USING utf8mb4) COLLATE utf8mb4_unicode_ci != ?", ['Dana BOS'])
+            ->query(
+                Marger::query()
+                    ->whereRaw("CONVERT(marger_view.sumber USING utf8mb4) COLLATE utf8mb4_unicode_ci != ?", ['Dana BOS'])
             ) // ambil dari view gabungan, exclude Dana BOS
             ->columns([
                 Tables\Columns\TextColumn::make('tipe_aset')->label('Jenis Aset')->sortable(),
+                Tables\Columns\TextColumn::make('gedung')->label('Gedung')->sortable(),
                 Tables\Columns\TextColumn::make('nama_barang')->label('Nama Barang')->searchable(),
                 Tables\Columns\TextColumn::make('ruang')->label('Ruang')->searchable(),
                 Tables\Columns\TextColumn::make('lantai')->label('Lantai')->searchable(),
                 Tables\Columns\TextColumn::make('jumlah')->label('Jumlah'),
                 Tables\Columns\TextColumn::make('sumber')->label('Inventaris')->badge(),
                 Tables\Columns\TextColumn::make('jumlah')
-                ->label('Jumlah')
-                ->summarize([
-                Sum::make()->label('Total')
-                ]),
+                    ->label('Jumlah')
+                    ->summarize([
+                        Sum::make()->label('Total')
+                    ]),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('tipe_aset_id')
                     ->label('Filter Tipe Aset')
                     ->options(\App\Models\TipeAset::pluck('tipe_aset', 'id'))
                     ->placeholder('Semua'),
+
+                Tables\Filters\SelectFilter::make('gedung')
+                    ->label('Filter Gedung')
+                    ->options(\App\Models\Gedung::pluck('nama_gedung', 'nama_gedung'))
+                    ->searchable()
+                    ->placeholder('Semua Gedung')
+                    ->query(function ($query, array $data) {
+                        if (!$data['value'])
+                            return $query;
+
+                        return $query->where('marger_view.gedung', $data['value']);
+                    }),
             ])
             ->headerActions([
                 ExportAction::make()
@@ -50,6 +64,7 @@ class TipeAsetBarangWidget extends TableWidget
                         ExcelExport::make('tipeasete_custom')
                             ->withColumns([
                                 Column::make('tipe_aset')->heading('Tipe Aset'),
+                                Column::make('gedung')->heading('Gedung'),
                                 Column::make('nama_barang')->heading('Nama Barang'),
                                 Column::make('ruang')->heading('Ruang'),
                                 Column::make('lantai')->heading('Lantai'),

@@ -11,12 +11,19 @@ class DanaBos extends Model
         'lantai_id',
         'ruang_id',
         'tipe_aset_dana_bos_id',
+        'tipe_aset_id',
+        'tipe_aset_kategori_id',
+        'gedung_id',
         'harga',
         'tgl_beli',
         'jumlah',
         'img',
         'keterangan',
         'no_seri',
+        'kode_inventaris',
+        'no_invoice',
+        'jenjang',
+        'group_id',
     ];
 
     public function ruang()
@@ -33,12 +40,34 @@ class DanaBos extends Model
     {
         return $this->belongsTo(TipeAsetDanaBos::class);
     }
+
+    public function tipeAset()
+    {
+        return $this->belongsTo(TipeAset::class);
+    }
+
+    public function tipeAsetKategori()
+    {
+        return $this->belongsTo(TipeAsetKategori::class);
+    }
+
+    public function gedung()
+    {
+        return $this->belongsTo(Gedung::class);
+    }
+
     public function setNamaBarangAttribute($value)
     {
         $this->attributes['nama_barang'] = strtoupper($value);
     }
+
     public function barangRusak()
     {
         return $this->morphMany(BarangRusak::class, 'inventaris');
+    }
+
+    public function printHistories()
+    {
+        return $this->hasMany(PrintHistory::class);
     }
 }

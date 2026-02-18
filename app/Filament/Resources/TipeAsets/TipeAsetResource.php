@@ -30,16 +30,6 @@ class TipeAsetResource extends Resource
         return TipeAsetForm::configure($schema);
     }
 
-    public static function table(Table $table): Table
-    {
-        return TipeAsetsTable::configure($table);
-    }
-
-    public static function getNavigationBadge(): ?string
-    {
-        return static::getModel()::count();
-    }
-
     public static function getRelations(): array
     {
         return [

@@ -32,11 +32,6 @@ class PribadiResource extends Resource
         return PribadiForm::configure($schema);
     }
 
-    public static function getNavigationBadge(): ?string
-    {
-        return static::getModel()::count();
-    }
-
     public static function table(Table $table): Table
     {
         return PribadisTable::configure($table);
