@@ -27,8 +27,10 @@ class BarangRusakObserver
 
             foreach ($ids as $itemId) {
                 $item = $modelClass::find($itemId);
-                if ($item && $item->jumlah > 0) {
-                    $item->decrement('jumlah', 1);
+                if ($item) {
+                    // Gunakan GREATEST agar jumlah tidak pernah di bawah 0
+                    $modelClass::where('id', $itemId)
+                        ->update(['jumlah' => DB::raw('GREATEST(jumlah - 1, 0)')]);
                 }
             }
         });

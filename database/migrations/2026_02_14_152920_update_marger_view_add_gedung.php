@@ -18,7 +18,7 @@ return new class extends Migration {
                 r.ruang as ruang,
                 l.lantai as lantai,
                 g.nama_gedung as gedung,
-                p.jumlah,
+                GREATEST(p.jumlah, 0) as jumlah,
                 'Pribadi' as sumber,
                 p.tipe_aset_id,
                 t.tipe_aset
@@ -36,7 +36,7 @@ return new class extends Migration {
                 r.ruang as ruang,
                 l.lantai as lantai,
                 g.nama_gedung as gedung,
-                s.jumlah,
+                GREATEST(s.jumlah, 0) as jumlah,
                 'Sekolah' as sumber,
                 s.tipe_aset_id,
                 t.tipe_aset
@@ -54,7 +54,7 @@ return new class extends Migration {
                 r.ruang as ruang,
                 l.lantai as lantai,
                 g.nama_gedung as gedung,
-                d.jumlah,
+                GREATEST(d.jumlah, 0) as jumlah,
                 'Dana BOS' as sumber,
                 d.tipe_aset_id,
                 t.tipe_aset
