@@ -11,7 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('transfer_inventaris', function (Blueprint $table) {
-            $table->json('kode_inventaris')->change();
+            $table->json('kode_inventaris')->nullable()->change();
         });
     }
 
