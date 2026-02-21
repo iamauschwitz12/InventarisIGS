@@ -23,11 +23,16 @@ class TipeAsetResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'TipeAset';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Kategori Manajemen';
+    protected static string|UnitEnum|null $navigationGroup = 'Kategori Manajemen';
 
     public static function form(Schema $schema): Schema
     {
         return TipeAsetForm::configure($schema);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return TipeAsetsTable::configure($table);
     }
 
     public static function getRelations(): array

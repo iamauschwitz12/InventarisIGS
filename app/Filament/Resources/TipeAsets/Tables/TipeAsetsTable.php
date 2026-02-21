@@ -16,7 +16,14 @@ class TipeAsetsTable
         return $table
             ->columns([
                 TextColumn::make('tipe_aset')
-                ->label('Tipe Aset'),
+                    ->label('Tipe Aset')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('created_at')
+                    ->label('Dibuat')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
