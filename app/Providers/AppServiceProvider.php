@@ -21,5 +21,6 @@ class AppServiceProvider extends ServiceProvider
     {
         \App\Models\TransferInventaris::observe(\App\Observers\TransferInventarisObserver::class);
         \App\Models\BarangRusak::observe(\App\Observers\BarangRusakObserver::class);
+        \App\Models\TransferAntarRuang::observe(\App\Observers\TransferAntarRuangObserver::class);
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\TransferInventaris\Schemas;
+namespace App\Filament\Resources\TransferAntarRuangs\Schemas;
 
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\TextInput;
@@ -13,9 +13,7 @@ use App\Models\Pribadi;
 use App\Models\Sekolah;
 use App\Models\DanaBos;
 
-use App\Models\PrintHistory;
-
-class TransferInventarisForm
+class TransferAntarRuangForm
 {
     public static function configure(Schema $schema): Schema
     {
@@ -33,7 +31,7 @@ class TransferInventarisForm
                             ->required()
                             ->reactive()
                             ->afterStateUpdated(function (callable $set) {
-                                $set('gedung_asal_id', null);
+                                $set('gedung_id', null);
                                 $set('lantai_asal_id', null);
                                 $set('ruang_asal_id', null);
                                 $set('sumber_id', null);
@@ -41,8 +39,8 @@ class TransferInventarisForm
                                 $set('jumlah_tersedia', null);
                             }),
 
-                        Select::make('gedung_asal_id')
-                            ->label('Gedung Asal')
+                        Select::make('gedung_id')
+                            ->label('Gedung')
                             ->options(\App\Models\Gedung::pluck('nama_gedung', 'id'))
                             ->required()
                             ->searchable()
@@ -52,6 +50,8 @@ class TransferInventarisForm
                             ->afterStateUpdated(function (callable $set) {
                                 $set('lantai_asal_id', null);
                                 $set('ruang_asal_id', null);
+                                $set('lantai_tujuan_id', null);
+                                $set('ruang_tujuan_id', null);
                                 $set('sumber_id', null);
                                 $set('nama_barang', null);
                                 $set('jumlah_tersedia', null);
@@ -60,7 +60,7 @@ class TransferInventarisForm
                         Select::make('lantai_asal_id')
                             ->label('Lantai Asal')
                             ->options(function (callable $get) {
-                                $gedungId = $get('gedung_asal_id');
+                                $gedungId = $get('gedung_id');
                                 if (!$gedungId)
                                     return [];
                                 return \App\Models\Lantai::where('gedung_id', $gedungId)->pluck('lantai', 'id');
@@ -103,7 +103,7 @@ class TransferInventarisForm
                             ->reactive()
                             ->options(function (callable $get) {
                                 $jenis = $get('jenis_inventaris');
-                                $gedungId = $get('gedung_asal_id');
+                                $gedungId = $get('gedung_id');
                                 $lantaiId = $get('lantai_asal_id');
                                 $ruangId = $get('ruang_asal_id');
 
@@ -175,57 +175,6 @@ class TransferInventarisForm
                             ->dehydrated(false),
                     ]),
 
-                Section::make('Tujuan Transfer')
-                    ->schema([
-                        Select::make('gedung_tujuan_id')
-                            ->label('Gedung Tujuan')
-                            ->options(\App\Models\Gedung::pluck('nama_gedung', 'id'))
-                            ->required()
-                            ->reactive()
-                            ->afterStateUpdated(function (callable $set) {
-                                $set('lantai_tujuan_id', null);
-                                $set('ruang_tujuan_id', null);
-                            })
-                            ->rules([
-                                function (callable $get) {
-                                    return function (string $attribute, $value, $fail) use ($get) {
-                                        if ($get('gedung_asal_id') == $value) {
-                                            $fail('Gedung tujuan tidak boleh sama dengan gedung asal.');
-                                        }
-                                    };
-                                },
-                            ]),
-
-                        Grid::make(2)
-                            ->schema([
-                                Select::make('lantai_tujuan_id')
-                                    ->label('Lantai Tujuan')
-                                    ->options(function (callable $get) {
-                                        $gedungId = $get('gedung_tujuan_id');
-                                        if (!$gedungId) {
-                                            return [];
-                                        }
-                                        return \App\Models\Lantai::where('gedung_id', $gedungId)->pluck('lantai', 'id');
-                                    })
-                                    ->searchable()
-                                    ->preload()
-                                    ->reactive()
-                                    ->afterStateUpdated(fn(callable $set) => $set('ruang_tujuan_id', null)),
-
-                                Select::make('ruang_tujuan_id')
-                                    ->label('Ruang Tujuan')
-                                    ->options(function (callable $get) {
-                                        $lantaiId = $get('lantai_tujuan_id');
-                                        if (!$lantaiId) {
-                                            return [];
-                                        }
-                                        return \App\Models\Ruang::where('lantai_id', $lantaiId)->pluck('ruang', 'id');
-                                    })
-                                    ->searchable()
-                                    ->preload(),
-                            ]),
-                    ]),
-
                 Section::make('Detail Transfer')
                     ->schema([
                         \Filament\Forms\Components\Hidden::make('jumlah_transfer')
@@ -258,6 +207,35 @@ class TransferInventarisForm
                         TextInput::make('keterangan')
                             ->label('Keterangan')
                             ->placeholder('Catatan transfer (opsional)'),
+                    ]),
+
+                Section::make('Tujuan Transfer')
+                    ->schema([
+                        Select::make('lantai_tujuan_id')
+                            ->label('Lantai Tujuan')
+                            ->options(function (callable $get) {
+                                $gedungId = $get('gedung_id');
+                                if (!$gedungId) {
+                                    return [];
+                                }
+                                return \App\Models\Lantai::where('gedung_id', $gedungId)->pluck('lantai', 'id');
+                            })
+                            ->searchable()
+                            ->preload()
+                            ->reactive()
+                            ->afterStateUpdated(fn(callable $set) => $set('ruang_tujuan_id', null)),
+
+                        Select::make('ruang_tujuan_id')
+                            ->label('Ruang Tujuan')
+                            ->options(function (callable $get) {
+                                $lantaiId = $get('lantai_tujuan_id');
+                                if (!$lantaiId) {
+                                    return [];
+                                }
+                                return \App\Models\Ruang::where('lantai_id', $lantaiId)->pluck('ruang', 'id');
+                            })
+                            ->searchable()
+                            ->preload(),
                     ]),
             ]);
     }

@@ -4,16 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class TransferInventaris extends Model
+class TransferAntarRuang extends Model
 {
     protected $fillable = [
         'jenis_inventaris',
         'status',
         'sumber_id',
-        'gedung_asal_id',
+        'gedung_id',
         'lantai_asal_id',
         'ruang_asal_id',
-        'gedung_tujuan_id',
         'lantai_tujuan_id',
         'ruang_tujuan_id',
         'nama_barang',
@@ -35,9 +34,9 @@ class TransferInventaris extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function gedungAsal()
+    public function gedung()
     {
-        return $this->belongsTo(Gedung::class, 'gedung_asal_id');
+        return $this->belongsTo(Gedung::class, 'gedung_id');
     }
 
     public function lantaiAsal()
@@ -50,11 +49,6 @@ class TransferInventaris extends Model
         return $this->belongsTo(Ruang::class, 'ruang_asal_id');
     }
 
-    public function gedungTujuan()
-    {
-        return $this->belongsTo(Gedung::class, 'gedung_tujuan_id');
-    }
-
     public function lantaiTujuan()
     {
         return $this->belongsTo(Lantai::class, 'lantai_tujuan_id');
@@ -63,18 +57,5 @@ class TransferInventaris extends Model
     public function ruangTujuan()
     {
         return $this->belongsTo(Ruang::class, 'ruang_tujuan_id');
-    }
-
-    /**
-     * Get the source model instance.
-     */
-    public function getSumberModelAttribute()
-    {
-        return match ($this->jenis_inventaris) {
-            'pribadi' => Pribadi::find($this->sumber_id),
-            'sekolah' => Sekolah::find($this->sumber_id),
-            'dana_bos' => DanaBos::find($this->sumber_id),
-            default => null,
-        };
     }
 }

@@ -86,9 +86,6 @@ class BarangRusaksTable
                     ->label('Lantai')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('kode_inventaris')
-                    ->label('Kode Inventaris')
-                    ->searchable(),
                 TextColumn::make('tgl_rusak')->date()->label('Tanggal Rusak'),
                 TextColumn::make('keterangan')->label('Keterangan')->limit(30)
                     ->searchable(),

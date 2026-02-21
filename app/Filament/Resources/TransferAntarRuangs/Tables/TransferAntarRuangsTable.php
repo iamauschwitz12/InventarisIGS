@@ -1,25 +1,19 @@
 <?php
 
-namespace App\Filament\Resources\TransferInventaris\Tables;
+namespace App\Filament\Resources\TransferAntarRuangs\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Filament\Forms\Components\DatePicker;
-use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Builder;
-use App\Models\TransferInventaris;
-use App\Models\Pribadi;
-use App\Models\Sekolah;
-use App\Models\DanaBos;
 
-class TransferInventarisTable
+class TransferAntarRuangsTable
 {
     public static function configure(Table $table): Table
     {
@@ -61,8 +55,8 @@ class TransferInventarisTable
                         'dana_bos' => 'warning',
                         default => 'gray',
                     }),
-                TextColumn::make('gedungAsal.nama_gedung')
-                    ->label('Gedung Asal')
+                TextColumn::make('gedung.nama_gedung')
+                    ->label('Gedung')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('lantaiAsal.lantai')
@@ -70,10 +64,6 @@ class TransferInventarisTable
                     ->sortable(),
                 TextColumn::make('ruangAsal.ruang')
                     ->label('Ruang Asal')
-                    ->sortable(),
-                TextColumn::make('gedungTujuan.nama_gedung')
-                    ->label('Gedung Tujuan')
-                    ->searchable()
                     ->sortable(),
                 TextColumn::make('lantaiTujuan.lantai')
                     ->label('Lantai Tujuan')
@@ -144,9 +134,9 @@ class TransferInventarisTable
                         'dana_bos' => 'Dana BOS',
                     ]),
 
-                SelectFilter::make('gedung_asal_id')
-                    ->label('Gedung Asal')
-                    ->relationship('gedungAsal', 'nama_gedung')
+                SelectFilter::make('gedung_id')
+                    ->label('Gedung')
+                    ->relationship('gedung', 'nama_gedung')
                     ->searchable()
                     ->preload(),
 
@@ -159,12 +149,6 @@ class TransferInventarisTable
                 SelectFilter::make('ruang_asal_id')
                     ->label('Ruang Asal')
                     ->relationship('ruangAsal', 'ruang')
-                    ->searchable()
-                    ->preload(),
-
-                SelectFilter::make('gedung_tujuan_id')
-                    ->label('Gedung Tujuan')
-                    ->relationship('gedungTujuan', 'nama_gedung')
                     ->searchable()
                     ->preload(),
 
@@ -202,37 +186,7 @@ class TransferInventarisTable
             ])
             ->recordActions([
                 ViewAction::make(),
-                Action::make('lihat_barcode')
-                    ->label('Lihat Barcode')
-                    ->icon('heroicon-o-qr-code')
-                    ->modalHeading('Barcode Transfer')
-                    ->modalSubmitAction(false)
-                    ->modalCancelAction(fn($action) => $action->label('Tutup'))
-                    ->modalContent(function (TransferInventaris $record) {
-                        $jenis = $record->jenis_inventaris;
-                        $sumberIds = is_array($record->sumber_id) ? $record->sumber_id : [$record->sumber_id];
-
-                        $modelClass = match ($jenis) {
-                            'pribadi' => Pribadi::class,
-                            'sekolah' => Sekolah::class,
-                            'dana_bos' => DanaBos::class,
-                            default => null,
-                        };
-
-                        $records = collect();
-                        if ($modelClass) {
-                            $records = $modelClass::whereIn('id', $sumberIds)
-                                ->orderBy('kode_inventaris')
-                                ->get();
-                        }
-
-                        return view('filament.resources.transfer-inventaris.components.barcode-transfer-modal', [
-                            'records' => $records,
-                            'transfer' => $record->load(['gedungAsal', 'gedungTujuan']),
-                            'jenis' => $jenis,
-                        ]);
-                    })
-                    ->modalWidth(Width::FiveExtraLarge),
+                EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

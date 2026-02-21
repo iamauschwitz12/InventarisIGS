@@ -15,6 +15,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use UnitEnum;
 
+
 class TransferInventarisResource extends Resource
 {
     protected static ?string $model = TransferInventaris::class;
@@ -23,7 +24,9 @@ class TransferInventarisResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'TransferInventaris';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Menu inventaris';
+    protected static ?string $navigationLabel = 'Antar Gedung';
+
+    protected static string | UnitEnum | null $navigationGroup = 'Transfer inventaris';
 
     public static function form(Schema $schema): Schema
     {
