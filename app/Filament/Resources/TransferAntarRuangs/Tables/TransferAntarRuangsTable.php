@@ -6,12 +6,18 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Filament\Forms\Components\DatePicker;
+use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\Pribadi;
+use App\Models\Sekolah;
+use App\Models\DanaBos;
+use App\Models\TransferAntarRuang;
 
 class TransferAntarRuangsTable
 {
@@ -187,6 +193,37 @@ class TransferAntarRuangsTable
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
+                Action::make('lihat_barcode')
+                    ->label('Lihat Barcode')
+                    ->icon('heroicon-o-qr-code')
+                    ->modalHeading('Barcode Transfer Antar Ruang')
+                    ->modalSubmitAction(false)
+                    ->modalCancelAction(fn($action) => $action->label('Tutup'))
+                    ->modalContent(function (TransferAntarRuang $record) {
+                        $jenis = $record->jenis_inventaris;
+                        $sumberIds = is_array($record->sumber_id) ? $record->sumber_id : [$record->sumber_id];
+
+                        $modelClass = match ($jenis) {
+                            'pribadi' => Pribadi::class,
+                            'sekolah' => Sekolah::class,
+                            'dana_bos' => DanaBos::class,
+                            default => null,
+                        };
+
+                        $records = collect();
+                        if ($modelClass) {
+                            $records = $modelClass::whereIn('id', $sumberIds)
+                                ->orderBy('kode_inventaris')
+                                ->get();
+                        }
+
+                        return view('filament.resources.transfer-antar-ruangs.components.barcode-transfer-modal', [
+                            'records' => $records,
+                            'transfer' => $record->load(['gedung', 'ruangAsal', 'ruangTujuan']),
+                            'jenis' => $jenis,
+                        ]);
+                    })
+                    ->modalWidth(Width::FiveExtraLarge),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
