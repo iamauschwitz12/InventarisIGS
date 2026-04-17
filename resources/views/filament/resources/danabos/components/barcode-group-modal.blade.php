@@ -110,7 +110,7 @@
     }
 </style>
 
-<div>
+<div wire:key="barcode-modal-{{ $groupId ?? $records->first()?->id ?? 'empty' }}">
     <div class="barcode-header">
         <span class="barcode-badge">
             {{ $records->count() }} Barcode
@@ -122,7 +122,7 @@
             @php
                 $qrUrl = route('danabos.detail', ['id' => $record->id]);
             @endphp
-            <div class="barcode-card">
+            <div class="barcode-card" wire:key="barcode-card-{{ $record->id }}">
                 <div class="barcode-qr">
                     {!! SimpleSoftwareIO\QrCode\Facades\QrCode::size(200)->generate($qrUrl) !!}
                 </div>

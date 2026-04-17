@@ -16,6 +16,9 @@ use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms;
 use App\Models\DanaBos;
+use App\Models\Ruang;
+use App\Models\Lantai;
+use App\Models\Gedung;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use pxlrbt\FilamentExcel\Columns\Column;
@@ -30,15 +33,7 @@ class DanaBosTable
     {
         return $table
             ->modifyQueryUsing(function (Builder $query) {
-                // Group by group_id + location: show one row per group per location
-                // Only show records with jumlah > 0 (exclude damaged/transferred)
-                $query->where('jumlah', '>', 0)
-                    ->where(function (Builder $q) {
-                    $q->whereRaw('id = (SELECT MIN(id) FROM dana_bos AS db2 WHERE db2.group_id = dana_bos.group_id AND db2.gedung_id = dana_bos.gedung_id AND db2.lantai_id = dana_bos.lantai_id AND db2.ruang_id = dana_bos.ruang_id AND db2.jumlah > 0)')
-                        ->whereNotNull('group_id');
-                })->orWhere(function (Builder $q) {
-                    $q->whereNull('group_id')->where('jumlah', '>', 0);
-                });
+                $query->where('jumlah', '>', 0);
             })
             ->columns([
                 TextColumn::make('no_invoice')
@@ -50,17 +45,6 @@ class DanaBosTable
                     ->searchable()
                     ->sortable()
                     ->formatStateUsing(function (DanaBos $record) {
-                        if ($record->group_id) {
-                            $kode = $record->kode_inventaris;
-                            $baseKode = preg_replace('/-\d{5}$/', '', $kode);
-                            $count = DanaBos::where('group_id', $record->group_id)
-                                ->where('gedung_id', $record->gedung_id)
-                                ->where('lantai_id', $record->lantai_id)
-                                ->where('ruang_id', $record->ruang_id)
-                                ->where('jumlah', '>', 0)
-                                ->count();
-                            return $baseKode . ' (' . $count . ' item)';
-                        }
                         return $record->kode_inventaris;
                     }),
                 TextColumn::make('nama_barang')
@@ -111,16 +95,9 @@ class DanaBosTable
                 TextColumn::make('jumlah')
                     ->label('Jumlah')
                     ->getStateUsing(function (DanaBos $record) {
-                        if ($record->group_id) {
-                            return DanaBos::where('group_id', $record->group_id)
-                                ->where('gedung_id', $record->gedung_id)
-                                ->where('lantai_id', $record->lantai_id)
-                                ->where('ruang_id', $record->ruang_id)
-                                ->where('jumlah', '>', 0)
-                                ->count();
-                        }
                         return $record->jumlah;
-                    }),
+                    })
+                    ->summarize(Sum::make()->label('jumlah')),
                 ImageColumn::make('img')
                     ->label('Gambar')
                     ->imageHeight(40)
@@ -185,17 +162,66 @@ class DanaBosTable
                 Filter::make('filter_barang')
                     ->label('Filter Barang')
                     ->form([
-                        Forms\Components\TextInput::make('nama_barang')
+                        Forms\Components\Select::make('nama_barang')
                             ->label('Nama Barang')
-                            ->placeholder('Cari nama barang...'),
+                            ->placeholder('Pilih nama barang...')
+                            ->searchable()
+                            ->options(
+                                fn() => DanaBos::where('jumlah', '>', 0)
+                                    ->distinct()
+                                    ->orderBy('nama_barang')
+                                    ->pluck('nama_barang', 'nama_barang')
+                                    ->toArray()
+                            ),
 
-                        Forms\Components\TextInput::make('ruang')
-                            ->label('Ruang')
-                            ->placeholder('Cari ruang...'),
+                        Forms\Components\Select::make('gedung_id')
+                            ->label('Gedung')
+                            ->placeholder('Pilih gedung...')
+                            ->searchable()
+                            ->live()
+                            ->afterStateUpdated(function ($set) {
+                                $set('lantai_id', null);
+                                $set('ruang_id', null);
+                            })
+                            ->options(
+                                fn() => Gedung::orderBy('nama_gedung')
+                                    ->pluck('nama_gedung', 'id')
+                                    ->toArray()
+                            ),
 
-                        Forms\Components\TextInput::make('lantai')
+                        Forms\Components\Select::make('lantai_id')
                             ->label('Lantai')
-                            ->placeholder('Cari lantai...'),
+                            ->placeholder('Pilih lantai...')
+                            ->searchable()
+                            ->live()
+                            ->afterStateUpdated(fn($set) => $set('ruang_id', null))
+                            ->options(
+                                fn($get) => Lantai::when(
+                                    $get('gedung_id'),
+                                    fn($q, $v) => $q->where('gedung_id', $v)
+                                )
+                                    ->orderBy('lantai')
+                                    ->pluck('lantai', 'id')
+                                    ->toArray()
+                            ),
+
+                        Forms\Components\Select::make('ruang_id')
+                            ->label('Ruang')
+                            ->placeholder('Pilih ruang...')
+                            ->searchable()
+                            ->options(
+                                fn($get) => Ruang::when(
+                                    $get('lantai_id'),
+                                    fn($q, $v) => $q->where('lantai_id', $v)
+                                )
+                                    ->when(
+                                        $get('gedung_id'),
+                                        fn($q, $v) => $q->where('gedung_id', $v)
+                                    )
+                                    ->orderBy('ruang')
+                                    ->pluck('ruang', 'id')
+                                    ->toArray()
+                            ),
 
                         Forms\Components\TextInput::make('no_seri')
                             ->label('Nomor Seri')
@@ -213,25 +239,22 @@ class DanaBosTable
                             ->when(
                                 $data['nama_barang'] ?? null,
                                 fn($q, $value) =>
-                                $q->where('nama_barang', 'like', "%{$value}%")
+                                $q->where('nama_barang', $value)
                             )
                             ->when(
-                                $data['ruang'] ?? null,
+                                $data['gedung_id'] ?? null,
                                 fn($q, $value) =>
-                                $q->whereHas(
-                                    'ruang',
-                                    fn($qr) =>
-                                    $qr->where('ruang', 'like', "%{$value}%")
-                                )
+                                $q->where('gedung_id', $value)
                             )
                             ->when(
-                                $data['lantai'] ?? null,
+                                $data['lantai_id'] ?? null,
                                 fn($q, $value) =>
-                                $q->whereHas(
-                                    'lantai',
-                                    fn($ql) =>
-                                    $ql->where('lantai', 'like', "%{$value}%")
-                                )
+                                $q->where('lantai_id', $value)
+                            )
+                            ->when(
+                                $data['ruang_id'] ?? null,
+                                fn($q, $value) =>
+                                $q->where('ruang_id', $value)
                             )
                             ->when(
                                 $data['no_seri'] ?? null,
@@ -274,58 +297,52 @@ class DanaBosTable
                     ->modalSubmitAction(false)
                     ->modalCancelAction(fn($action) => $action->label('Tutup'))
                     ->modalContent(function (DanaBos $record) {
-                        if ($record->group_id) {
-                            $records = DanaBos::where('group_id', $record->group_id)
-                                ->where('jumlah', '>', 0)
-                                ->orderBy('kode_inventaris')
-                                ->get();
-                            $groupId = $record->group_id;
-                        } else {
-                            $records = collect([$record]);
-                            $groupId = null;
-                        }
-
                         return view('filament.resources.danabos.components.barcode-group-modal', [
-                            'records' => $records,
-                            'groupId' => $groupId,
+                            'records' => collect([$record]),
+                            'groupId' => null,
                         ]);
                     })
-                    ->modalWidth(Width::FiveExtraLarge),
+                    ->modalWidth(Width::Medium),
                 Action::make('print')
                     ->label('Print')
                     ->icon('heroicon-o-printer')
                     ->action(function (DanaBos $record) {
-                        if ($record->group_id) {
-                            // Print all in group
-                            PrintHistory::create([
-                                'user_id' => auth()->id(),
-                                'dana_bos_id' => $record->id,
-                                'start_number' => 1,
-                                'jumlah' => DanaBos::where('group_id', $record->group_id)->count(),
-                            ]);
+                        PrintHistory::create([
+                            'user_id' => auth()->id(),
+                            'dana_bos_id' => $record->id,
+                            'start_number' => 1,
+                            'jumlah' => 1,
+                        ]);
 
-                            return redirect()->route('danabos.danabosqr.group', [
-                                'groupId' => $record->group_id,
-                            ]);
-                        } else {
-                            // Legacy: single record print
-                            PrintHistory::create([
-                                'user_id' => auth()->id(),
-                                'dana_bos_id' => $record->id,
-                                'start_number' => 1,
-                                'jumlah' => $record->jumlah,
-                            ]);
-
-                            return redirect()->route('danabos.danabosqr', [
-                                'record' => $record,
-                                'start' => 1,
-                            ]);
-                        }
+                        return redirect()->route('danabos.danabosqr', [
+                            'record' => $record,
+                            'start' => 1,
+                        ]);
                     }),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    \Filament\Actions\BulkAction::make('print_bulk')
+                        ->label('Print Barcode Terpilih')
+                        ->icon('heroicon-o-printer')
+                        ->color('success')
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
+                            $ids = $records->pluck('id')->join(',');
+
+                            // Register to history for each record just in case
+                            foreach ($records as $record) {
+                                PrintHistory::create([
+                                    'user_id' => auth()->id(),
+                                    'dana_bos_id' => $record->id,
+                                    'start_number' => 1,
+                                    'jumlah' => 1,
+                                ]);
+                            }
+
+                            return redirect()->route('danabos.danabosqr.bulk', ['ids' => $ids]);
+                        })
+                        ->deselectRecordsAfterCompletion(),
                 ]),
             ]);
     }

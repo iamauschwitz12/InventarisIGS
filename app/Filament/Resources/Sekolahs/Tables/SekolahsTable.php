@@ -16,6 +16,9 @@ use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms;
 use App\Models\Sekolah;
+use App\Models\Ruang;
+use App\Models\Lantai;
+use App\Models\Gedung;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use pxlrbt\FilamentExcel\Columns\Column;
@@ -30,13 +33,7 @@ class SekolahsTable
     {
         return $table
             ->modifyQueryUsing(function (Builder $query) {
-                $query->where('jumlah', '>', 0)
-                    ->where(function (Builder $q) {
-                        $q->whereRaw('id = (SELECT MIN(id) FROM sekolahs AS s2 WHERE s2.group_id = sekolahs.group_id AND s2.gedung_id = sekolahs.gedung_id AND s2.lantai_id = sekolahs.lantai_id AND s2.ruang_id = sekolahs.ruang_id AND s2.jumlah > 0)')
-                            ->whereNotNull('group_id');
-                    })->orWhere(function (Builder $q) {
-                        $q->whereNull('group_id')->where('jumlah', '>', 0);
-                    });
+                $query->where('jumlah', '>', 0);
             })
             ->columns([
                 TextColumn::make('no_invoice')
@@ -48,17 +45,6 @@ class SekolahsTable
                     ->searchable()
                     ->sortable()
                     ->formatStateUsing(function (Sekolah $record) {
-                        if ($record->group_id) {
-                            $kode = $record->kode_inventaris;
-                            $baseKode = preg_replace('/-\d{5}$/', '', $kode);
-                            $count = Sekolah::where('group_id', $record->group_id)
-                                ->where('gedung_id', $record->gedung_id)
-                                ->where('lantai_id', $record->lantai_id)
-                                ->where('ruang_id', $record->ruang_id)
-                                ->where('jumlah', '>', 0)
-                                ->count();
-                            return $baseKode . ' (' . $count . ' item)';
-                        }
                         return $record->kode_inventaris;
                     }),
                 TextColumn::make('nama_barang')
@@ -105,16 +91,9 @@ class SekolahsTable
                 TextColumn::make('jumlah')
                     ->label('Jumlah')
                     ->getStateUsing(function (Sekolah $record) {
-                        if ($record->group_id) {
-                            return Sekolah::where('group_id', $record->group_id)
-                                ->where('gedung_id', $record->gedung_id)
-                                ->where('lantai_id', $record->lantai_id)
-                                ->where('ruang_id', $record->ruang_id)
-                                ->where('jumlah', '>', 0)
-                                ->count();
-                        }
                         return $record->jumlah;
-                    }),
+                    })
+                    ->summarize(Sum::make()->label('jumlah')),
                 ImageColumn::make('img')
                     ->label('Gambar')
                     ->imageHeight(40)
@@ -180,51 +159,97 @@ class SekolahsTable
                 Filter::make('filter_barang')
                     ->label('Filter Barang')
                     ->form([
-                        Forms\Components\TextInput::make('nama_barang')
+                        Forms\Components\Select::make('nama_barang')
                             ->label('Nama Barang')
-                            ->placeholder('Cari nama barang...'),
+                            ->placeholder('Pilih nama barang...')
+                            ->searchable()
+                            ->options(
+                                fn() => Sekolah::where('jumlah', '>', 0)
+                                    ->distinct()
+                                    ->orderBy('nama_barang')
+                                    ->pluck('nama_barang', 'nama_barang')
+                                    ->toArray()
+                            ),
 
-                        Forms\Components\TextInput::make('ruang')
+                        Forms\Components\Select::make('gedung_id')
+                            ->label('Gedung')
+                            ->placeholder('Pilih gedung...')
+                            ->searchable()
+                            ->live()
+                            ->afterStateUpdated(function ($set) {
+                                $set('lantai_id', null);
+                                $set('ruang_id', null);
+                            })
+                            ->options(
+                                fn() => Gedung::orderBy('nama_gedung')
+                                    ->pluck('nama_gedung', 'id')
+                                    ->toArray()
+                            ),
+
+                        Forms\Components\Select::make('lantai_id')
+                            ->label('Lantai')
+                            ->placeholder('Pilih lantai...')
+                            ->searchable()
+                            ->live()
+                            ->afterStateUpdated(fn($set) => $set('ruang_id', null))
+                            ->options(
+                                fn($get) => Lantai::when(
+                                    $get('gedung_id'),
+                                    fn($q, $v) => $q->where('gedung_id', $v)
+                                )
+                                ->orderBy('lantai')
+                                ->pluck('lantai', 'id')
+                                ->toArray()
+                            ),
+
+                        Forms\Components\Select::make('ruang_id')
                             ->label('Ruang')
-                            ->placeholder('Cari ruang...'),
+                            ->placeholder('Pilih ruang...')
+                            ->searchable()
+                            ->options(
+                                fn($get) => Ruang::when(
+                                    $get('lantai_id'),
+                                    fn($q, $v) => $q->where('lantai_id', $v)
+                                )
+                                ->when(
+                                    $get('gedung_id'),
+                                    fn($q, $v) => $q->where('gedung_id', $v)
+                                )
+                                ->orderBy('ruang')
+                                ->pluck('ruang', 'id')
+                                ->toArray()
+                            ),
 
                         Forms\Components\TextInput::make('no_seri')
                             ->label('Nomor Seri')
                             ->placeholder('Cari nomor seri...'),
-
-                        Forms\Components\TextInput::make('lantai')
-                            ->label('Lantai')
-                            ->placeholder('Cari lantai...'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
                                 $data['nama_barang'] ?? null,
                                 fn($q, $value) =>
-                                $q->where('nama_barang', 'like', "%{$value}%")
+                                $q->where('nama_barang', $value)
                             )
                             ->when(
-                                $data['ruang'] ?? null,
+                                $data['gedung_id'] ?? null,
                                 fn($q, $value) =>
-                                $q->whereHas(
-                                    'ruang',
-                                    fn($qr) =>
-                                    $qr->where('ruang', 'like', "%{$value}%")
-                                )
+                                $q->where('gedung_id', $value)
+                            )
+                            ->when(
+                                $data['lantai_id'] ?? null,
+                                fn($q, $value) =>
+                                $q->where('lantai_id', $value)
+                            )
+                            ->when(
+                                $data['ruang_id'] ?? null,
+                                fn($q, $value) =>
+                                $q->where('ruang_id', $value)
                             )
                             ->when(
                                 $data['no_seri'] ?? null,
                                 fn($q, $value) =>
                                 $q->where('no_seri', 'like', "%{$value}%")
-                            )
-                            ->when(
-                                $data['lantai'] ?? null,
-                                fn($q, $value) =>
-                                $q->whereHas(
-                                    'lantai',
-                                    fn($ql) =>
-                                    $ql->where('lantai', 'like', "%{$value}%")
-                                )
                             );
                     }),
             ])
@@ -248,7 +273,8 @@ class SekolahsTable
                         } else {
                             $record->delete();
                         }
-                    }),
+                    })
+                    ->requiresConfirmation(),
                 Action::make('lihat_barcode')
                     ->label('Lihat Barcode')
                     ->icon('heroicon-o-qr-code')
@@ -256,20 +282,9 @@ class SekolahsTable
                     ->modalSubmitAction(false)
                     ->modalCancelAction(fn($action) => $action->label('Tutup'))
                     ->modalContent(function (Sekolah $record) {
-                        if ($record->group_id) {
-                            $records = Sekolah::where('group_id', $record->group_id)
-                                ->where('jumlah', '>', 0)
-                                ->orderBy('kode_inventaris')
-                                ->get();
-                            $groupId = $record->group_id;
-                        } else {
-                            $records = collect([$record]);
-                            $groupId = null;
-                        }
-
                         return view('filament.resources.sekolahs.components.barcode-group-modal', [
-                            'records' => $records,
-                            'groupId' => $groupId,
+                            'records' => collect([$record]),
+                            'groupId' => null,
                         ]);
                     })
                     ->modalWidth(Width::FiveExtraLarge),
@@ -277,35 +292,41 @@ class SekolahsTable
                     ->label('Print')
                     ->icon('heroicon-o-printer')
                     ->action(function (Sekolah $record) {
-                        if ($record->group_id) {
-                            PrintHistory::create([
-                                'user_id' => auth()->id(),
-                                'sekolah_id' => $record->id,
-                                'start_number' => 1,
-                                'jumlah' => Sekolah::where('group_id', $record->group_id)->count(),
-                            ]);
+                        PrintHistory::create([
+                            'user_id' => auth()->id(),
+                            'sekolah_id' => $record->id,
+                            'start_number' => 1,
+                            'jumlah' => 1,
+                        ]);
 
-                            return redirect()->route('sekolah.sekolahqr.group', [
-                                'groupId' => $record->group_id,
-                            ]);
-                        } else {
-                            PrintHistory::create([
-                                'user_id' => auth()->id(),
-                                'sekolah_id' => $record->id,
-                                'start_number' => 1,
-                                'jumlah' => $record->jumlah,
-                            ]);
-
-                            return redirect()->route('sekolah.sekolahqr', [
-                                'record' => $record,
-                                'start' => 1,
-                            ]);
-                        }
+                        return redirect()->route('sekolah.sekolahqr', [
+                            'record' => $record,
+                            'start' => 1,
+                        ]);
                     }),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    \Filament\Actions\BulkAction::make('print_bulk')
+                        ->label('Print Barcode Terpilih')
+                        ->icon('heroicon-o-printer')
+                        ->color('success')
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
+                            $ids = $records->pluck('id')->join(',');
+
+                            foreach ($records as $record) {
+                                PrintHistory::create([
+                                    'user_id' => auth()->id(),
+                                    'sekolah_id' => $record->id,
+                                    'start_number' => 1,
+                                    'jumlah' => 1,
+                                ]);
+                            }
+
+                            return redirect()->route('sekolah.sekolahqr.bulk', ['ids' => $ids]);
+                        })
+                        ->deselectRecordsAfterCompletion(),
                 ]),
             ]);
     }

@@ -53,3 +53,24 @@ Route::get('/danabos-qr-group/{groupId}', function (string $groupId) {
     abort_if($records->isEmpty(), 404);
     return view('danabos-qr-group', compact('records'));
 })->name('danabos.danabosqr.group');
+
+Route::get('/danabos-qr-bulk', function (\Illuminate\Http\Request $request) {
+    $ids = explode(',', $request->query('ids', ''));
+    $records = DanaBos::whereIn('id', $ids)->orderBy('kode_inventaris')->get();
+    abort_if($records->isEmpty(), 404);
+    return view('danabos-qr-group', compact('records'));
+})->name('danabos.danabosqr.bulk');
+
+Route::get('/pribadi-qr-bulk', function (\Illuminate\Http\Request $request) {
+    $ids = explode(',', $request->query('ids', ''));
+    $records = Pribadi::whereIn('id', $ids)->orderBy('kode_inventaris')->get();
+    abort_if($records->isEmpty(), 404);
+    return view('pribadi-qr-group', compact('records'));
+})->name('pribadi.printqr.bulk');
+
+Route::get('/sekolah-qr-bulk', function (\Illuminate\Http\Request $request) {
+    $ids = explode(',', $request->query('ids', ''));
+    $records = Sekolah::whereIn('id', $ids)->orderBy('kode_inventaris')->get();
+    abort_if($records->isEmpty(), 404);
+    return view('sekolah-qr-group', compact('records'));
+})->name('sekolah.sekolahqr.bulk');
