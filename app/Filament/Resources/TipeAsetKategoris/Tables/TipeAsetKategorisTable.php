@@ -7,6 +7,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\DeleteAction;
 
 class TipeAsetKategorisTable
 {
@@ -25,12 +26,17 @@ class TipeAsetKategorisTable
                 //
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn (): bool => auth()->user()?->role === 'administrator'),
+                DeleteAction::make()
+                    ->visible(fn (): bool => auth()->user()?->role === 'administrator'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->visible(fn (): bool => auth()->user()?->role === 'administrator'),
                 ]),
-            ]);
+            ])
+            ->recordUrl(null);
     }
 }

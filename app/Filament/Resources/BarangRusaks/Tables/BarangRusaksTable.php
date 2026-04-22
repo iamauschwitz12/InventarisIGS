@@ -262,8 +262,10 @@ class BarangRusaksTable
                     ]),
             ])
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
+                EditAction::make()
+                    ->visible(fn (): bool => auth()->user()?->role === 'administrator'),
+                DeleteAction::make()
+                    ->visible(fn (): bool => auth()->user()?->role === 'administrator'),
                 Action::make('lihat_barcode')
                     ->label('Lihat Barcode')
                     ->icon('heroicon-o-qr-code')
@@ -298,8 +300,10 @@ class BarangRusaksTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->visible(fn (): bool => auth()->user()?->role === 'administrator'),
                 ]),
-            ]);
+            ])
+            ->recordUrl(null);
     }
 }

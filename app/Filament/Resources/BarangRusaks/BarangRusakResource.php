@@ -22,16 +22,31 @@ class BarangRusakResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArchiveBoxXMark;
 
-    protected static ?string $recordTitleAttribute = 'BarangRusak';
+    protected static ?string $recordTitleAttribute = 'no_seri';
 
     public static function form(Schema $schema): Schema
     {
         return BarangRusakForm::configure($schema);
     }
-    
+
     public static function table(Table $table): Table
     {
         return BarangRusaksTable::configure($table);
+    }
+
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return auth()->user()?->role === 'administrator';
+    }
+
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return auth()->user()?->role === 'administrator';
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->role === 'administrator';
     }
 
     public static function getRelations(): array

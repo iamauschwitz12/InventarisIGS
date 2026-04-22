@@ -17,11 +17,25 @@ use UnitEnum;
 
 class SekolahResource extends Resource
 {
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return auth()->user()?->role === 'administrator';
+    }
+
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return auth()->user()?->role === 'administrator';
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->role === 'administrator';
+    }
     protected static ?string $model = Sekolah::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingStorefront;
 
-    protected static ?string $recordTitleAttribute = 'Sekolah';
+    protected static ?string $recordTitleAttribute = 'no_seri';
 
     protected static string | UnitEnum | null $navigationGroup = 'Menu inventaris';
 

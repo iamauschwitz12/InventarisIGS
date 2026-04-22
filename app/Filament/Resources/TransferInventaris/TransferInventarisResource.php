@@ -18,11 +18,25 @@ use UnitEnum;
 
 class TransferInventarisResource extends Resource
 {
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return auth()->user()?->role === 'administrator';
+    }
+
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return auth()->user()?->role === 'administrator';
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->role === 'administrator';
+    }
     protected static ?string $model = TransferInventaris::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowRightCircle;
 
-    protected static ?string $recordTitleAttribute = 'TransferInventaris';
+    protected static ?string $recordTitleAttribute = 'status';
 
     protected static ?string $navigationLabel = 'Antar Gedung';
 

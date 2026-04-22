@@ -19,11 +19,25 @@ use UnitEnum;
 
 class TransferAntarRuangResource extends Resource
 {
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return auth()->user()?->role === 'administrator';
+    }
+
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return auth()->user()?->role === 'administrator';
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->role === 'administrator';
+    }
     protected static ?string $model = TransferAntarRuang::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowPath;
 
-    protected static ?string $recordTitleAttribute = 'TransferAntarRuang';
+    protected static ?string $recordTitleAttribute = 'status';
 
     protected static ?string $navigationLabel = 'Antar Ruang / Lantai';
 

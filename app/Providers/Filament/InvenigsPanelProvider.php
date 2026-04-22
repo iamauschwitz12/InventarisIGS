@@ -25,6 +25,7 @@ class InvenigsPanelProvider extends PanelProvider
     {
         return $panel
             ->default()
+            ->globalSearch(false)
             ->id('invenigs')
             ->path('invenigs')
             ->brandName('Inventaris IGS') // untuk title browser & accessibility

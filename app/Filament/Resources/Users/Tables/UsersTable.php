@@ -1,26 +1,29 @@
 <?php
 
-namespace App\Filament\Resources\Lantais\Tables;
+namespace App\Filament\Resources\Users\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Actions\DeleteAction;
 
-class LantaisTable
+class UsersTable
 {
     public static function configure(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('gedung.nama_gedung')
-                    ->label('Gedung')
+                TextColumn::make('name')
+                    ->label('Nama Pengguna')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('lantai')
-                    ->label('Lantai')
+                TextColumn::make('email')
+                    ->label('Email')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('role')
+                    ->label('Role')
                     ->searchable()
                     ->sortable(),
             ])
@@ -28,15 +31,11 @@ class LantaisTable
                 //
             ])
             ->recordActions([
-                EditAction::make()
-                    ->visible(fn (): bool => auth()->user()?->role === 'administrator'),
-                DeleteAction::make()
-                    ->visible(fn (): bool => auth()->user()?->role === 'administrator'),
+                EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()
-                        ->visible(fn (): bool => auth()->user()?->role === 'administrator'),
+                    DeleteBulkAction::make(),
                 ]),
             ])
             ->recordUrl(null);

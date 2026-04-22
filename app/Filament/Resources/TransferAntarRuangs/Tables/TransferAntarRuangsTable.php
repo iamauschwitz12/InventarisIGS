@@ -18,6 +18,7 @@ use App\Models\Pribadi;
 use App\Models\Sekolah;
 use App\Models\DanaBos;
 use App\Models\TransferAntarRuang;
+use Filament\Actions\DeleteAction;
 
 class TransferAntarRuangsTable
 {
@@ -192,7 +193,10 @@ class TransferAntarRuangsTable
             ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn (): bool => auth()->user()?->role === 'administrator'),
+                DeleteAction::make()
+                    ->visible(fn (): bool => auth()->user()?->role === 'administrator'),
                 Action::make('lihat_barcode')
                     ->label('Lihat Barcode')
                     ->icon('heroicon-o-qr-code')
@@ -227,8 +231,10 @@ class TransferAntarRuangsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->visible(fn (): bool => auth()->user()?->role === 'administrator'),
                 ]),
-            ]);
+            ])
+            ->recordUrl(null);
     }
 }

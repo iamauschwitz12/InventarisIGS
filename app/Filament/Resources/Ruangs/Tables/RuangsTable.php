@@ -32,13 +32,17 @@ class RuangsTable
                 //
             ])
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
+                EditAction::make()
+                    ->visible(fn (): bool => auth()->user()?->role === 'administrator'),
+                DeleteAction::make()
+                    ->visible(fn (): bool => auth()->user()?->role === 'administrator'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->visible(fn (): bool => auth()->user()?->role === 'administrator'),
                 ]),
-            ]);
+            ])
+            ->recordUrl(null);
     }
 }

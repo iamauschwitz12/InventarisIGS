@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Filament\Resources\Ruangs;
+namespace App\Filament\Resources\Users;
 
-use App\Filament\Resources\Ruangs\Pages\CreateRuang;
-use App\Filament\Resources\Ruangs\Pages\EditRuang;
-use App\Filament\Resources\Ruangs\Pages\ListRuangs;
-use App\Filament\Resources\Ruangs\Schemas\RuangForm;
-use App\Filament\Resources\Ruangs\Tables\RuangsTable;
-use App\Models\Ruang;
+use App\Filament\Resources\Users\Pages\CreateUser;
+use App\Filament\Resources\Users\Pages\EditUser;
+use App\Filament\Resources\Users\Pages\ListUsers;
+use App\Filament\Resources\Users\Schemas\UserForm;
+use App\Filament\Resources\Users\Tables\UsersTable;
+use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -15,13 +15,18 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use UnitEnum;
 
-class RuangResource extends Resource
+class UserResource extends Resource
 {
-    protected static ?string $model = Ruang::class;
+    public static function canViewAny(): bool
+    {
+        // Kasir tidak akan melihat menu ini di sidebar
+        return in_array(auth()->user()->role, ['administrator']);
+    }
+    protected static ?string $model = User::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedNumberedList;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
 
-    protected static ?string $recordTitleAttribute = 'Ruang';
+    protected static ?string $recordTitleAttribute = 'name';
 
     protected static string | UnitEnum | null $navigationGroup = 'Kategori Manajemen';
 
@@ -41,12 +46,12 @@ class RuangResource extends Resource
     }
     public static function form(Schema $schema): Schema
     {
-        return RuangForm::configure($schema);
+        return UserForm::configure($schema);
     }
 
     public static function table(Table $table): Table
     {
-        return RuangsTable::configure($table);
+        return UsersTable::configure($table);
     }
 
     public static function getRelations(): array
@@ -59,9 +64,9 @@ class RuangResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ListRuangs::route('/'),
-            'create' => CreateRuang::route('/create'),
-            'edit' => EditRuang::route('/{record}/edit'),
+            'index' => ListUsers::route('/'),
+            'create' => CreateUser::route('/create'),
+            'edit' => EditUser::route('/{record}/edit'),
         ];
     }
 }

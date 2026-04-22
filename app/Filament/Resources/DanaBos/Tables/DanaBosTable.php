@@ -280,8 +280,10 @@ class DanaBosTable
                         ]);
                     })
                     ->modalWidth(Width::FourExtraLarge),
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn (): bool => auth()->user()?->role === 'administrator'),
                 DeleteAction::make()
+                    ->visible(fn (): bool => auth()->user()?->role === 'administrator')
                     ->action(function (DanaBos $record) {
                         // Delete all records in the group
                         if ($record->group_id) {
@@ -322,7 +324,8 @@ class DanaBosTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->visible(fn (): bool => auth()->user()?->role === 'administrator'),
                     \Filament\Actions\BulkAction::make('print_bulk')
                         ->label('Print Barcode Terpilih')
                         ->icon('heroicon-o-printer')
@@ -344,6 +347,8 @@ class DanaBosTable
                         })
                         ->deselectRecordsAfterCompletion(),
                 ]),
-            ]);
+            ])
+            ->recordUrl(null);
+            
     }
 }

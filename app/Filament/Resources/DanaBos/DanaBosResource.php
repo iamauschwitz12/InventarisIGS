@@ -21,12 +21,26 @@ class DanaBosResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAcademicCap;
 
-    protected static ?string $recordTitleAttribute = 'DanaBos';
+    protected static ?string $recordTitleAttribute = 'no_seri';
 
     protected static string | UnitEnum | null $navigationGroup = 'Menu inventaris';
 
     public static ?string $label = 'Inventaris Dana Bos';
 
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return auth()->user()?->role === 'administrator';
+    }
+
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return auth()->user()?->role === 'administrator';
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->role === 'administrator';
+    }
     public static function form(Schema $schema): Schema
     {
         return DanaBosForm::configure($schema);

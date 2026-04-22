@@ -265,8 +265,10 @@ class SekolahsTable
                         ]);
                     })
                     ->modalWidth(Width::FourExtraLarge),
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn (): bool => auth()->user()?->role === 'administrator'),
                 DeleteAction::make()
+                    ->visible(fn (): bool => auth()->user()?->role === 'administrator')
                     ->action(function (Sekolah $record) {
                         if ($record->group_id) {
                             Sekolah::where('group_id', $record->group_id)->delete();
@@ -307,7 +309,8 @@ class SekolahsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->visible(fn (): bool => auth()->user()?->role === 'administrator'),
                     \Filament\Actions\BulkAction::make('print_bulk')
                         ->label('Print Barcode Terpilih')
                         ->icon('heroicon-o-printer')
@@ -328,6 +331,7 @@ class SekolahsTable
                         })
                         ->deselectRecordsAfterCompletion(),
                 ]),
-            ]);
+            ])
+            ->recordUrl(null);
     }
 }

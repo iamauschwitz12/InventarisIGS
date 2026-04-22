@@ -25,6 +25,20 @@ class LantaiResource extends Resource
 
     protected static string | UnitEnum | null $navigationGroup = 'Kategori Manajemen';
 
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return auth()->user()?->role === 'administrator';
+    }
+
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return auth()->user()?->role === 'administrator';
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->role === 'administrator';
+    }
     public static function form(Schema $schema): Schema
     {
         return LantaiForm::configure($schema);
