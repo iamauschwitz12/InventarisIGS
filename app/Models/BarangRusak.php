@@ -19,6 +19,7 @@ class BarangRusak extends Model
         'tgl_input',
         'keterangan',
         'no_seri',
+        'user_id',
     ];
 
     protected $casts = [
@@ -31,6 +32,11 @@ class BarangRusak extends Model
     public function gedung()
     {
         return $this->belongsTo(Gedung::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class);
     }
 
     /**

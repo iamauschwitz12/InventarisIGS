@@ -23,7 +23,13 @@ class Sekolah extends Model
         'no_invoice',
         'jenjang',
         'group_id',
+        'user_id',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class);
+    }
 
     public function ruang()
     {

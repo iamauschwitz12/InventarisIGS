@@ -96,6 +96,18 @@ class TransferInventarisTable
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('user.name')
+                    ->label('PIC (Input Oleh)')
+                    ->icon('heroicon-o-user-circle')
+                    ->badge()
+                    ->color(fn ($record) => match ($record->user?->role) {
+                        'administrator' => 'danger',
+                        'operator'      => 'info',
+                        default         => 'gray',
+                    })
+                    ->getStateUsing(fn ($record) => $record->user?->name ?? '-')
+                    ->searchable(query: fn ($query, string $search) => $query->whereHas('user', fn ($q) => $q->where('name', 'like', "%{$search}%")))
+                    ->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([

@@ -8,4 +8,10 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateTransferInventaris extends CreateRecord
 {
     protected static string $resource = TransferInventarisResource::class;
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $data['user_id'] = auth()->id();
+        return $data;
+    }
 }

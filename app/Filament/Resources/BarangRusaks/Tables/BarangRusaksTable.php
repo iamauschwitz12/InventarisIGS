@@ -90,6 +90,20 @@ class BarangRusaksTable
                 TextColumn::make('keterangan')->label('Keterangan')->limit(30)
                     ->searchable(),
                 TextColumn::make('created_at')->date()->label('Tgl Input'),
+                TextColumn::make('user.name')
+                    ->label('PIC (Input Oleh)')
+                    ->icon('heroicon-o-user-circle')
+                    ->badge()
+                    ->color(fn ($record) => match ($record->user?->role) {
+                        'administrator' => 'danger',
+                        'operator'      => 'info',
+                        default         => 'gray',
+                    })
+                    ->getStateUsing(fn ($record) => $record->user?->name ?? '-')
+                    ->searchable(query: function (\Illuminate\Database\Eloquent\Builder $query, string $search): \Illuminate\Database\Eloquent\Builder {
+                        return $query->whereHas('user', fn ($q) => $q->where('name', 'like', "%{$search}%"));
+                    })
+                    ->sortable(),
             ])
             ->filters([
                 Filter::make('filter_barang_rusak')

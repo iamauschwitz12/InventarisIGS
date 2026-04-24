@@ -8,4 +8,10 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateTransferAntarRuang extends CreateRecord
 {
     protected static string $resource = TransferAntarRuangResource::class;
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $data['user_id'] = auth()->id();
+        return $data;
+    }
 }

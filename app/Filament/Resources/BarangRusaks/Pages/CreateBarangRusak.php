@@ -9,6 +9,13 @@ use App\Models\Pribadi;
 class CreateBarangRusak extends CreateRecord
 {
     protected static string $resource = BarangRusakResource::class;
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $data['user_id'] = auth()->id();
+        return $data;
+    }
+
     protected function afterCreate(): void
     {
         $barangRusak = $this->record;

@@ -45,6 +45,7 @@ class CreateDanaBos extends CreateRecord
             $recordData['kode_inventaris'] = $kodeInventaris;
             $recordData['jumlah'] = 1;
             $recordData['group_id'] = $groupId;
+            $recordData['user_id'] = auth()->id();
 
             $record = DanaBos::create($recordData);
 
